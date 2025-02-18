@@ -1,72 +1,129 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>WSP ChatBot</title>
-		<link
-			rel="stylesheet"
-			href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css" />
-		<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-		<style>
-			#response {
-				margin-top: 20px;
-				padding: 10px;
-				min-height: 50px;
-			}
-			#response h3 {
-				color: #333;
-				font-size: 1.2em;
-			}
-			#response strong {
-				color: #d9534f;
-			}
-			#response ul {
-				padding-left: 20px;
-			}
-			#response li {
-				margin-bottom: 5px;
-			}
-		</style>
-	</head>
-	<body>
-		<div class="container">
-			<h2>Free ChatBot</h2>
-			<div class="form-group">
-				<input
-					type="text"
-					class="form-control"
-					id="userInput"
-					placeholder="Enter your question" />
-			</div>
-			<button class="btn btn-success" onclick="sendMessage()">Ask!</button>
-			<div id="response"></div>
-		</div>
-		<script>
-			async function sendMessage() {
-    const input = document.getElementById('userInput').value;
-    const responseDiv = document.getElementById('response');
-    if (!input) {
-        responseDiv.innerHTML = 'Please enter a message.';
-        return;
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chatbot Widget Demo</title>
+  <!-- Bootstrap and Font Awesome for styling -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    /* Floating Chat Icon */
+    #chat-icon {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      font-size: 30px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      z-index: 1000;
     }
+    /* Chat Window Container */
+    #chat-window {
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      width: 300px;
+      max-width: 90%;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      z-index: 1000;
+      display: none; /* Hidden initially */
+    }
+    #chat-window header {
+      background: #007bff;
+      color: #fff;
+      padding: 10px;
+      border-top-left-radius: 10px;
+      border-top-right-radius: 10px;
+    }
+    #chat-window .chat-content {
+      padding: 10px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    #chat-window .chat-input {
+      padding: 10px;
+      border-top: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <!-- Your existing website content -->
+  <h1>Welcome to Our Website</h1>
+  <p>Enjoy exploring our content while our chatbot is always here to help!</p>
 
-    responseDiv.innerHTML = 'Loading...';
+  <!-- Floating Chat Icon -->
+  <button id="chat-icon"><i class="fas fa-comment"></i></button>
 
-    try {
+  <!-- Chat Window -->
+  <div id="chat-window">
+    <header>
+      Chatbot
+      <button id="close-chat" style="float:right; background:none; border:none; color:white; font-size:20px;">&times;</button>
+    </header>
+    <div class="chat-content" id="response">
+      <!-- Chat responses will appear here -->
+    </div>
+    <div class="chat-input">
+      <input type="text" id="userInput" class="form-control" placeholder="Enter your question">
+      <button class="btn btn-primary btn-block mt-2" onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    // Toggle the chat window display
+    document.getElementById('chat-icon').addEventListener('click', function() {
+      document.getElementById('chat-window').style.display = 'block';
+    });
+    document.getElementById('close-chat').addEventListener('click', function() {
+      document.getElementById('chat-window').style.display = 'none';
+    });
+
+    // Chatbot sendMessage function (same as before, adjusted for inline display)
+    async function sendMessage() {
+      const input = document.getElementById('userInput').value;
+      const responseDiv = document.getElementById('response');
+      
+      if (!input) {
+        responseDiv.innerHTML += '<div>Please enter a message.</div>';
+        return;
+      }
+      
+      // Display user's message
+      responseDiv.innerHTML += `<div><strong>You:</strong> ${input}</div>`;
+      document.getElementById('userInput').value = '';
+      
+      // Show a loading indicator
+      responseDiv.innerHTML += '<div>Loading...</div>';
+      
+      try {
         const response = await fetch('http://localhost:5000/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: input }),
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: input }),
         });
-
         const data = await response.json();
         const markdownText = data.choices?.[0]?.message?.content || 'No response received.';
-        responseDiv.innerHTML = marked.parse(markdownText);
-    } catch (error) {
-        responseDiv.innerHTML = 'Error: ' + error.message;
+        responseDiv.innerHTML += `<div><strong>Bot:</strong> ${marked.parse(markdownText)}</div>`;
+      } catch (error) {
+        responseDiv.innerHTML += `<div>Error: ${error.message}</div>`;
+      }
+      
+      // Scroll to the bottom of the chat content
+      responseDiv.scrollTop = responseDiv.scrollHeight;
     }
-}
-		</script>
-	</body>
+  </script>
+</body>
 </html>
